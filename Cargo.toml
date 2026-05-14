@@ -1,0 +1,19 @@
+[package]
+name = "zeri_os"
+version = "0.1.0"
+edition = "2024"
+authors = ["Paul-0x5061756c <82609900+Paul-0x5061756c@users.noreply.github.com>"]
+
+[dependencies]
+bootloader = "0.9"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[[bin]]
+name = "zeri_os"
+test = false
+bench = false
