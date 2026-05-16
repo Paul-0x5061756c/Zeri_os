@@ -108,13 +108,13 @@ impl ColorCode {
 }
 
 impl Writer {
-    pub fn set_color(&mut self, color_code: ColorCode) -> ColorCode {
+    fn set_color(&mut self, color_code: ColorCode) -> ColorCode {
         let old = self.color_code;
         self.color_code = color_code;
         old
     }
 
-    pub fn with_color<F>(&mut self, color_code: ColorCode, f: F)
+    fn with_color<F>(&mut self, color_code: ColorCode, f: F)
     where
         F: FnOnce(&mut Self),
     {
