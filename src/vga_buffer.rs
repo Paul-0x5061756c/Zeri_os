@@ -107,6 +107,7 @@ impl ColorCode {
     }
 }
 
+#[allow(dead_code)]
 impl Writer {
     fn set_color(&mut self, color_code: ColorCode) -> ColorCode {
         let old = self.color_code;
@@ -201,4 +202,26 @@ pub fn _print_colored(args: fmt::Arguments, color: ColorCode) {
     writer.with_color(color, |writer| {
         writer.write_fmt(args).unwrap();
     });
+}
+
+#[test_case]
+fn test_println_simple() {
+    println!("test_println_simple output");
+}
+
+#[test_case]
+fn test_println_many() {
+    for _ in 0..200 {
+        println!("test_println_many output");
+    }
+}
+
+#[test_case]
+fn test_println_output() {
+    let s = "Some test string that fits on a single line";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_character), c);
+    }
 }
