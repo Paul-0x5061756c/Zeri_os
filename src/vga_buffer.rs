@@ -33,6 +33,31 @@ macro_rules! println {
     );
 }
 
+#[macro_export]
+macro_rules! print_colored {
+    ($color:expr, $($arg:tt)*) => (
+        $crate::vga_buffer::_print_colored(
+            format_args!($($arg)*),
+            $color
+        )
+    );
+}
+
+#[macro_export]
+macro_rules! println_colored {
+    ($color:expr) => (
+        $crate::print_colored!($color, "\n")
+    );
+
+    ($color:expr, $($arg:tt)*) => (
+        $crate::print_colored!(
+            $color,
+            "{}\n",
+            format_args!($($arg)*)
+        )
+    );
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -57,7 +82,7 @@ pub enum Color {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
-struct ColorCode(u8);
+pub struct ColorCode(u8);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
@@ -77,12 +102,27 @@ pub struct Writer {
 }
 
 impl ColorCode {
-    fn new(foreground: Color, background: Color) -> Self {
+    pub fn new(foreground: Color, background: Color) -> Self {
         Self((background as u8) << 4 | (foreground as u8))
     }
 }
 
 impl Writer {
+    pub fn set_color(&mut self, color_code: ColorCode) -> ColorCode {
+        let old = self.color_code;
+        self.color_code = color_code;
+        old
+    }
+
+    pub fn with_color<F>(&mut self, color_code: ColorCode, f: F)
+    where
+        F: FnOnce(&mut Self),
+    {
+        let old = self.set_color(color_code);
+        f(self);
+        self.color_code = old
+    }
+
     fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.new_line(),
@@ -150,4 +190,15 @@ pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
 
     WRITER.lock().write_fmt(args).unwrap();
+}
+
+#[doc(hidden)]
+pub fn _print_colored(args: fmt::Arguments, color: ColorCode) {
+    use core::fmt::Write;
+
+    let mut writer = WRITER.lock();
+
+    writer.with_color(color, |writer| {
+        writer.write_fmt(args).unwrap();
+    });
 }
